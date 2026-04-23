@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        width: 100vw;
+        height: 100vh;
+        background: transparent;
+        cursor: crosshair;
+        overflow: hidden;
+      }
+
+      #magnifier {
+        position: fixed;
+        pointer-events: none;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        transform: translate(-50%, calc(-100% - 16px));
+      }
+
+      canvas {
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow:
+          0 0 0 1px rgba(0, 0, 0, 0.5),
+          0 4px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      #hex-label {
+        background: rgba(0, 0, 0, 0.75);
+        color: white;
+        font-family: monospace;
+        font-size: 13px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      #color-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid white;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="magnifier">
+      <canvas id="canvas"></canvas>
+      <div id="hex-label">
+        <div id="color-dot"></div>
+        <span id="hex-text">#000000</span>
+      </div>
+    </div>
+
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      const magnifier = document.getElementById('magnifier');
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const hexText = document.getElementById('hex-text');
+      const colorDot = document.getElementById('color-dot');
+
+      const GRID = 11;
+      const CELL = 10;
+      const SIZE = GRID * CELL;
+
+      canvas.width = SIZE;
+      canvas.height = SIZE;
+
+      function drawMagnifier({ pixels, size, hex }) {
+        ctx.clearRect(0, 0, SIZE, SIZE);
+
+        for (let row = 0; row < size; row++) {
+          for (let col = 0; col < size; col++) {
+            const { r, g, b } = pixels[row * size + col];
+            ctx.fillStyle = `rgb(${r},${g},${b})`;
+            ctx.fillRect(col * CELL, row * CELL, CELL, CELL);
+          }
+        }
+
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i <= size; i++) {
+          ctx.beginPath();
+          ctx.moveTo(i * CELL, 0);
+          ctx.lineTo(i * CELL, SIZE);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(0, i * CELL);
+          ctx.lineTo(SIZE, i * CELL);
+          ctx.stroke();
+        }
+
+        const cx = Math.floor(size / 2) * CELL;
+        const cy = Math.floor(size / 2) * CELL;
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(cx, cy, CELL, CELL);
+
+        hexText.textContent = hex;
+        colorDot.style.background = hex;
+      }
+
+      let lastCall = 0;
+      const THROTTLE = 50;
+
+      document.addEventListener('mousemove', async (e) => {
+        const now = Date.now();
+        if (now - lastCall < THROTTLE) return;
+        lastCall = now;
+
+        magnifier.style.display = 'flex';
+        magnifier.style.left = `${e.clientX}px`;
+        magnifier.style.top = `${e.clientY}px`;
+
+        const region = await ipcRenderer.invoke('get-region', {
+          x: e.screenX,
+          y: e.screenY,
+        });
+
+        if (region) drawMagnifier(region);
+      });
+
+      document.addEventListener('click', async (e) => {
+        const region = await ipcRenderer.invoke('get-region', {
+          x: e.screenX,
+          y: e.screenY,
+        });
+        if (region) {
+          await ipcRenderer.invoke('copy-and-close', region.hex);
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') ipcRenderer.invoke('close-overlay');
+      });
+    </script>
+  </body>
+</html>
