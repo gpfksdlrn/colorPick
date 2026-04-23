@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: rgba(30, 30, 30, 0.9);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 16px;
+        height: 52px;
+        font-family: -apple-system, sans-serif;
+        color: white;
+        font-size: 14px;
+        overflow: hidden;
+      }
+      .dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(255, 255, 255, 0.3);
+        flex-shrink: 0;
+      }
+      .check {
+        font-size: 13px;
+        opacity: 0.7;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dot" id="dot"></div>
+    <span id="hex"></span>
+    <span class="check">✓ 복사됨</span>
+    <script>
+      const { ipcRenderer } = require('electron');
+      ipcRenderer.on('toast-data', (_, hex) => {
+        document.getElementById('dot').style.background = hex;
+        document.getElementById('hex').textContent = hex;
+      });
+      setTimeout(() => window.close(), 1800);
+    </script>
+  </body>
+</html>
