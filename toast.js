@@ -2,6 +2,20 @@ const { BrowserWindow, screen } = require('electron');
 const path = require('path');
 
 function showToast(hex, cursorPoint) {
+  const toast = createToastWindow(cursorPoint);
+  toast.webContents.on('did-finish-load', () => {
+    toast.webContents.send('toast-data', { type: 'color', value: hex });
+  });
+}
+
+function showFormatToast(label, cursorPoint) {
+  const toast = createToastWindow(cursorPoint);
+  toast.webContents.on('did-finish-load', () => {
+    toast.webContents.send('toast-data', { type: 'format', value: label });
+  });
+}
+
+function createToastWindow(cursorPoint) {
   const toast = new BrowserWindow({
     width: 220,
     height: 52,
@@ -23,13 +37,11 @@ function showToast(hex, cursorPoint) {
 
   toast.loadFile(path.join(__dirname, 'toast.html'));
 
-  toast.webContents.on('did-finish-load', () => {
-    toast.webContents.send('toast-data', hex);
-  });
-
   setTimeout(() => {
     if (!toast.isDestroyed()) toast.close();
   }, 2000);
+
+  return toast;
 }
 
-module.exports = { showToast };
+module.exports = { showToast, showFormatToast };

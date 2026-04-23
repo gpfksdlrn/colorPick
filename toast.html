@@ -36,13 +36,21 @@
   </head>
   <body>
     <div class="dot" id="dot"></div>
-    <span id="hex"></span>
-    <span class="check">✓ 복사됨</span>
+    <span id="text"></span>
+    <span class="check" id="check"></span>
     <script>
       const { ipcRenderer } = require('electron');
-      ipcRenderer.on('toast-data', (_, hex) => {
-        document.getElementById('dot').style.background = hex;
-        document.getElementById('hex').textContent = hex;
+      ipcRenderer.on('toast-data', (_, { type, value }) => {
+        if (type === 'color') {
+          document.getElementById('dot').style.display = 'block';
+          document.getElementById('dot').style.background = value;
+          document.getElementById('text').textContent = value;
+          document.getElementById('check').textContent = '✓ 복사됨';
+        } else if (type === 'format') {
+          document.getElementById('dot').style.display = 'none';
+          document.getElementById('text').textContent = `복사 포맷: ${value}`;
+          document.getElementById('check').textContent = '✓ 변경됨';
+        }
       });
       setTimeout(() => window.close(), 1800);
     </script>

@@ -1,7 +1,7 @@
 const { BrowserWindow, screen, ipcMain, clipboard } = require('electron');
 const { getColorAt, getRegionAt } = require('./colorPicker');
-const { showToast } = require('./toast');
-const { getCopyFormat } = require('./setting');
+const { showToast, showFormatToast } = require('./toast');
+const { getCopyFormat, setCopyFormat } = require('./setting');
 
 let overlayWindow = null;
 
@@ -29,7 +29,6 @@ function createOverlay() {
 
   overlayWindow.setIgnoreMouseEvents(false);
   overlayWindow.loadFile('overlay.html');
-
   overlayWindow.on('closed', () => {
     overlayWindow = null;
   });
@@ -67,6 +66,16 @@ function setupIpc() {
 
   ipcMain.handle('close-overlay', () => {
     if (overlayWindow) overlayWindow.close();
+  });
+
+  ipcMain.handle('get-format', () => getCopyFormat());
+
+  ipcMain.handle('set-format', (_, format) => setCopyFormat(format));
+
+  ipcMain.handle('show-format-toast', (_, format) => {
+    const labels = { hex: 'HEX', rgb: 'RGB', hsl: 'HSL' };
+    const point = screen.getCursorScreenPoint();
+    showFormatToast(labels[format], point);
   });
 }
 

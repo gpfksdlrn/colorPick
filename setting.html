@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, sans-serif;
+        background: #1e1e1e;
+        color: white;
+        padding: 20px;
+        user-select: none;
+      }
+
+      h2 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        opacity: 0.6;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 8px;
+        border: 1.5px solid transparent;
+        transition: background 0.15s;
+      }
+
+      .option:hover {
+        background: rgba(255, 255, 255, 0.07);
+      }
+
+      .option.selected {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .option-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .option.selected .option-dot {
+        border-color: white;
+        background: white;
+      }
+
+      .option.selected .option-dot::after {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #1e1e1e;
+      }
+
+      .option-info {
+        flex: 1;
+      }
+
+      .option-title {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
+
+      .option-example {
+        font-size: 12px;
+        opacity: 0.4;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>복사 포맷</h2>
+
+    <div class="option" data-format="hex">
+      <div class="option-dot"></div>
+      <div class="option-info">
+        <div class="option-title">HEX</div>
+        <div class="option-example">#e5e510</div>
+      </div>
+    </div>
+
+    <div class="option" data-format="rgb">
+      <div class="option-dot"></div>
+      <div class="option-info">
+        <div class="option-title">RGB</div>
+        <div class="option-example">rgb(229, 229, 16)</div>
+      </div>
+    </div>
+
+    <div class="option" data-format="hsl">
+      <div class="option-dot"></div>
+      <div class="option-info">
+        <div class="option-title">HSL</div>
+        <div class="option-example">hsl(60, 87%, 48%)</div>
+      </div>
+    </div>
+
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      // 현재 설정 불러오기
+      ipcRenderer.invoke('get-format').then((format) => {
+        document
+          .querySelector(`[data-format="${format}"]`)
+          ?.classList.add('selected');
+      });
+
+      // 클릭 시 설정 변경
+      document.querySelectorAll('.option').forEach((el) => {
+        el.addEventListener('click', async () => {
+          document
+            .querySelectorAll('.option')
+            .forEach((o) => o.classList.remove('selected'));
+          el.classList.add('selected');
+          await ipcRenderer.invoke('set-format', el.dataset.format);
+          await ipcRenderer.invoke('show-format-toast', el.dataset.format);
+          window.close();
+        });
+      });
+    </script>
+  </body>
+</html>

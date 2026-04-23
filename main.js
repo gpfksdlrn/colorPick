@@ -10,4 +10,7 @@ app.whenReady().then(() => {
   createTray(toggleOverlay, () => app.quit());
 });
 
-app.on('window-all-closed', () => app.quit());
+// 창 다 닫혀도 앱 유지 (트레이에서 계속 실행)
+app.on('window-all-closed', (e) => {
+  e.preventDefault();
+});
