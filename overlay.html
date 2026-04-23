@@ -53,6 +53,20 @@
         border-radius: 50%;
         border: 1px solid white;
       }
+
+      #format-label {
+        background: rgba(0, 0, 0, 0.75);
+        color: rgba(255, 255, 255, 0.6);
+        font-family: monospace;
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 0 0 6px 6px;
+        margin-top: -4px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
     </style>
   </head>
   <body>
@@ -61,6 +75,10 @@
       <div id="hex-label">
         <div id="color-dot"></div>
         <span id="hex-text">#000000</span>
+      </div>
+      <div id="format-label">
+        <span id="rgb-text">rgb(0, 0, 0)</span>
+        <span id="hsl-text">hsl(0, 0%, 0%)</span>
       </div>
     </div>
 
@@ -80,7 +98,7 @@
       canvas.width = SIZE;
       canvas.height = SIZE;
 
-      function drawMagnifier({ pixels, size, hex }) {
+      function drawMagnifier({ pixels, size, hex, rgb, hsl }) {
         ctx.clearRect(0, 0, SIZE, SIZE);
 
         for (let row = 0; row < size; row++) {
@@ -112,6 +130,11 @@
 
         hexText.textContent = hex;
         colorDot.style.background = hex;
+
+        document.getElementById('rgb-text').textContent =
+          `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+        document.getElementById('hsl-text').textContent =
+          `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
       }
 
       let lastCall = 0;
@@ -140,7 +163,11 @@
           y: e.screenY,
         });
         if (region) {
-          await ipcRenderer.invoke('copy-and-close', region.hex);
+          await ipcRenderer.invoke('copy-and-close', {
+            hex: region.hex,
+            rgb: region.rgb,
+            hsl: region.hsl,
+          });
         }
       });
 
