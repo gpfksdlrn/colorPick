@@ -32,7 +32,7 @@ function createTray(onToggle, onQuit) {
   const icon = nativeImage.createFromPath(
     path.join(__dirname, 'Logo', 'tray-iconTemplate.png'),
   );
-  icon.setTemplateImage(true);
+  if (process.platform === 'darwin') icon.setTemplateImage(true);
   tray = new Tray(icon);
   tray.setToolTip('Color Picker');
   tray.setContextMenu(

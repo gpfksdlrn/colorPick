@@ -42,8 +42,13 @@
       "toast.html",
       "setting.html",
       "icon.icns",
+      "icon.ico",
       "Logo/tray-iconTemplate.png",
       "Logo/tray-iconTemplate@2x.png"
-    ]
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.ico"
+    }
   }
 }
