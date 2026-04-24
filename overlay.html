@@ -138,12 +138,14 @@
       }
 
       let lastCall = 0;
+      let isPending = false;
       const THROTTLE = 50;
 
       document.addEventListener('mousemove', async (e) => {
         const now = Date.now();
-        if (now - lastCall < THROTTLE) return;
+        if (now - lastCall < THROTTLE || isPending) return;
         lastCall = now;
+        isPending = true;
 
         magnifier.style.display = 'flex';
         magnifier.style.left = `${e.clientX}px`;
@@ -153,6 +155,7 @@
           x: e.screenX,
           y: e.screenY,
         });
+        isPending = false;
 
         if (region) drawMagnifier(region);
       });
