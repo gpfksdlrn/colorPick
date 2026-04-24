@@ -1,12 +1,49 @@
 {
+  "name": "colorpick",
+  "version": "1.0.0",
+  "description": "화면 어디서든 색상을 추출하는 데스크탑 툴",
+  "author": "Hyeran Mun",
   "main": "main.js",
   "devDependencies": {
-    "electron": "^41.3.0"
+    "electron": "^41.3.0",
+    "electron-builder": "^26.8.1"
   },
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder"
   },
   "dependencies": {
     "electron-store": "^11.0.2"
+  },
+  "build": {
+    "appId": "com.yourname.colorpick",
+    "productName": "ColorPick",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg",
+      "icon": "icon.icns",
+      "identity": null,
+      "extendInfo": {
+        "NSScreenCaptureUsageDescription": "색상 추출을 위해 화면 녹화 권한이 필요합니다."
+      }
+    },
+    "asarUnpack": [
+      "Logo/tray-iconTemplate.png",
+      "Logo/tray-iconTemplate@2x.png"
+    ],
+    "files": [
+      "main.js",
+      "overlay.js",
+      "colorPicker.js",
+      "toast.js",
+      "tray.js",
+      "setting.js",
+      "overlay.html",
+      "toast.html",
+      "setting.html",
+      "icon.icns",
+      "Logo/tray-iconTemplate.png",
+      "Logo/tray-iconTemplate@2x.png"
+    ]
   }
 }
