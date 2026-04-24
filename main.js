@@ -20,6 +20,7 @@ app.whenReady().then(async () => {
   globalShortcut.register('CommandOrControl+Shift+C', toggleOverlay);
 
   createTray(toggleOverlay, () => app.quit());
+  toggleOverlay();
 });
 
 app.on('will-quit', () => {
