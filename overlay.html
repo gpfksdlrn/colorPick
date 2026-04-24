@@ -137,19 +137,21 @@
           `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
       }
 
+      document.addEventListener('mousemove', (e) => {
+        magnifier.style.display = 'flex';
+        magnifier.style.left = `${e.clientX}px`;
+        magnifier.style.top = `${e.clientY}px`;
+      });
+
       let lastCall = 0;
       let isPending = false;
-      const THROTTLE = 50;
+      const THROTTLE = 33;
 
       document.addEventListener('mousemove', async (e) => {
         const now = Date.now();
         if (now - lastCall < THROTTLE || isPending) return;
         lastCall = now;
         isPending = true;
-
-        magnifier.style.display = 'flex';
-        magnifier.style.left = `${e.clientX}px`;
-        magnifier.style.top = `${e.clientY}px`;
 
         const region = await ipcRenderer.invoke('get-region', {
           x: e.screenX,

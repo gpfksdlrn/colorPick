@@ -1,45 +1,23 @@
 const { desktopCapturer, screen } = require('electron');
 
-async function getColorAt(x, y) {
-  const point = { x, y };
-  const display = screen.getDisplayNearestPoint(point);
-  const scaleFactor = display.scaleFactor;
+const sourceCache = new Map();
+const CACHE_TTL = 50;
+
+async function getSources(display) {
+  const now = Date.now();
+  const cached = sourceCache.get(display.id);
+  if (cached && now - cached.time < CACHE_TTL) return cached.sources;
 
   const sources = await desktopCapturer.getSources({
     types: ['screen'],
     thumbnailSize: {
-      width: display.size.width * scaleFactor,
-      height: display.size.height * scaleFactor,
+      width: display.size.width * display.scaleFactor,
+      height: display.size.height * display.scaleFactor,
     },
   });
 
-  const source =
-    sources.find((s) => s.display_id === String(display.id)) ?? sources[0];
-  if (!source) return null;
-  const thumbnail = source.thumbnail;
-  const thumbSize = thumbnail.getSize();
-
-  const px = Math.min(
-    Math.floor((x - display.bounds.x) * scaleFactor),
-    thumbSize.width - 1,
-  );
-  const py = Math.min(
-    Math.floor((y - display.bounds.y) * scaleFactor),
-    thumbSize.height - 1,
-  );
-
-  const buffer = thumbnail
-    .crop({ x: px, y: py, width: 1, height: 1 })
-    .toBitmap();
-  if (!buffer || buffer.length < 3) return null;
-
-  const [b, g, r] = buffer;
-  return {
-    r,
-    g,
-    b,
-    hex: `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`,
-  };
+  sourceCache.set(display.id, { sources, time: now });
+  return sources;
 }
 
 function rgbToHsl(r, g, b) {
@@ -81,17 +59,11 @@ async function getRegionAt(x, y, size = 11) {
   const display = screen.getDisplayNearestPoint(point);
   const scaleFactor = display.scaleFactor;
 
-  const sources = await desktopCapturer.getSources({
-    types: ['screen'],
-    thumbnailSize: {
-      width: display.size.width * scaleFactor,
-      height: display.size.height * scaleFactor,
-    },
-  });
-
+  const sources = await getSources(display);
   const source =
     sources.find((s) => s.display_id === String(display.id)) ?? sources[0];
   if (!source) return null;
+
   const thumbnail = source.thumbnail;
   const thumbSize = thumbnail.getSize();
 
@@ -137,4 +109,4 @@ async function getRegionAt(x, y, size = 11) {
   };
 }
 
-module.exports = { getColorAt, getRegionAt };
+module.exports = { getRegionAt };
