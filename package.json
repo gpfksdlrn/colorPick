@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder --publish never"
   },
   "dependencies": {
     "electron-store": "^11.0.2"
@@ -32,23 +32,15 @@
       "Logo/tray-iconTemplate@2x.png"
     ],
     "files": [
-      "main.js",
-      "overlay.js",
-      "colorPicker.js",
-      "toast.js",
-      "tray.js",
-      "setting.js",
-      "overlay.html",
-      "toast.html",
-      "setting.html",
-      "icon.icns",
-      "icon.ico",
-      "Logo/tray-iconTemplate.png",
-      "Logo/tray-iconTemplate@2x.png"
+      "*.js",
+      "*.html",
+      "Logo/*",
+      "icon.*"
     ],
     "win": {
       "target": "portable",
       "icon": "icon.ico"
-    }
+    },
+    "publish": null
   }
 }
