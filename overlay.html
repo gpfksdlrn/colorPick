@@ -132,30 +132,37 @@
 
       canvas.width = SIZE;
       canvas.height = SIZE;
+      ctx.imageSmoothingEnabled = false;
 
-      function drawMagnifier({ pixels, size, hex, rgb, hsl }) {
-        ctx.clearRect(0, 0, SIZE, SIZE);
+      const offscreen = new OffscreenCanvas(GRID, GRID);
+      const offCtx = offscreen.getContext('2d');
+      const imageData = offCtx.createImageData(GRID, GRID);
 
-        for (let row = 0; row < size; row++) {
-          for (let col = 0; col < size; col++) {
-            const { r, g, b } = pixels[row * size + col];
-            ctx.fillStyle = `rgb(${r},${g},${b})`;
-            ctx.fillRect(col * CELL, row * CELL, CELL, CELL);
-          }
+      function drawMagnifier({ bitmap, size, hex, rgb, hsl }) {
+        // BGRA → RGBA 변환 (재사용 버퍼에 직접 쓰기)
+        for (let i = 0; i < size * size; i++) {
+          const s = i * 4;
+          const d = i * 4;
+          imageData.data[d]     = bitmap[s + 2];
+          imageData.data[d + 1] = bitmap[s + 1];
+          imageData.data[d + 2] = bitmap[s];
+          imageData.data[d + 3] = 255;
         }
+        offCtx.putImageData(imageData, 0, 0);
+        ctx.clearRect(0, 0, SIZE, SIZE);
+        ctx.drawImage(offscreen, 0, 0, SIZE, SIZE);
 
+        // 그리드 선 (패스 1개로 배치)
         ctx.strokeStyle = 'rgba(0,0,0,0.15)';
         ctx.lineWidth = 0.5;
+        ctx.beginPath();
         for (let i = 0; i <= size; i++) {
-          ctx.beginPath();
           ctx.moveTo(i * CELL, 0);
           ctx.lineTo(i * CELL, SIZE);
-          ctx.stroke();
-          ctx.beginPath();
           ctx.moveTo(0, i * CELL);
           ctx.lineTo(SIZE, i * CELL);
-          ctx.stroke();
         }
+        ctx.stroke();
 
         const cx = Math.floor(size / 2) * CELL;
         const cy = Math.floor(size / 2) * CELL;
@@ -165,7 +172,6 @@
 
         hexText.textContent = hex;
         colorDot.style.background = hex;
-
         rgbText.textContent = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
         hslText.textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
       }

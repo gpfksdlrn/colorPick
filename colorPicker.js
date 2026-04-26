@@ -86,26 +86,18 @@ async function getRegionAt(x, y, size = 11) {
   const bitmap = region.toBitmap();
   if (!bitmap || bitmap.length < size * size * 4) return null;
 
-  const pixels = [];
-  for (let i = 0; i < size * size; i++) {
-    const idx = i * 4;
-    pixels.push({
-      r: bitmap[idx + 2],
-      g: bitmap[idx + 1],
-      b: bitmap[idx + 0],
-    });
-  }
-
-  const center = pixels[Math.floor((size * size) / 2)];
-  const hex = `#${center.r.toString(16).padStart(2, '0')}${center.g.toString(16).padStart(2, '0')}${center.b.toString(16).padStart(2, '0')}`;
-  const hsl = rgbToHsl(center.r, center.g, center.b);
+  const centerIdx = Math.floor((size * size) / 2) * 4;
+  const r = bitmap[centerIdx + 2];
+  const g = bitmap[centerIdx + 1];
+  const b = bitmap[centerIdx];
+  const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 
   return {
-    pixels,
+    bitmap,
     size,
     hex,
-    rgb: { r: center.r, g: center.g, b: center.b },
-    hsl,
+    rgb: { r, g, b },
+    hsl: rgbToHsl(r, g, b),
   };
 }
 
