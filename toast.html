@@ -13,6 +13,7 @@
         border-radius: 12px;
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 10px;
         padding: 0 16px;
         height: 52px;
@@ -40,16 +41,20 @@
     <span class="check" id="check"></span>
     <script>
       const { ipcRenderer } = require('electron');
+      const dot = document.getElementById('dot');
+      const text = document.getElementById('text');
+      const check = document.getElementById('check');
+
       ipcRenderer.on('toast-data', (_, { type, value }) => {
         if (type === 'color') {
-          document.getElementById('dot').style.display = 'block';
-          document.getElementById('dot').style.background = value;
-          document.getElementById('text').textContent = value;
-          document.getElementById('check').textContent = '✓ 복사됨';
-        } else if (type === 'format') {
-          document.getElementById('dot').style.display = 'none';
-          document.getElementById('text').textContent = `복사 포맷: ${value}`;
-          document.getElementById('check').textContent = '✓ 변경됨';
+          dot.style.display = 'block';
+          dot.style.background = value;
+          text.textContent = value;
+          check.textContent = '✓ 복사됨';
+        } else {
+          dot.style.display = 'none';
+          text.textContent = `복사 포맷: ${value}`;
+          check.textContent = '✓ 변경됨';
         }
       });
     </script>

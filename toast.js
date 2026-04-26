@@ -17,7 +17,7 @@ function showFormatToast(label, cursorPoint) {
 
 function createToastWindow(cursorPoint) {
   const toast = new BrowserWindow({
-    width: 220,
+    width: 300,
     height: 52,
     frame: false,
     transparent: true,
@@ -33,7 +33,7 @@ function createToastWindow(cursorPoint) {
 
   const display = screen.getDisplayNearestPoint(cursorPoint);
   const { x: dx, y: dy, width, height } = display.workArea;
-  toast.setPosition(dx + Math.floor((width - 220) / 2), dy + height - 80);
+  toast.setPosition(dx + Math.floor((width - 300) / 2), dy + height - 80);
 
   toast.loadFile(path.join(__dirname, 'toast.html'));
 
