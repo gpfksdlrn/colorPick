@@ -12,7 +12,7 @@ function openSettings() {
 
   settingsWindow = new BrowserWindow({
     width: 300,
-    height: 320,
+    height: 550,
     frame: true,
     resizable: false,
     title: '설정',

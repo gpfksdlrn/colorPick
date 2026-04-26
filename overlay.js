@@ -1,10 +1,13 @@
-const { BrowserWindow, screen, ipcMain, clipboard, systemPreferences, dialog, shell, app } = require('electron');
+const { BrowserWindow, screen, ipcMain, clipboard, systemPreferences, dialog, shell, globalShortcut } = require('electron');
 const path = require('path');
 const { getRegionAt } = require('./colorPicker');
 const { showToast, showFormatToast } = require('./toast');
 const { getCopyFormat, setCopyFormat } = require('./setting');
 
 let overlayWindow = null;
+
+const CYCLE_FORMATS = { hex: 'rgb', rgb: 'hsl', hsl: 'hex' };
+const FORMAT_LABELS = { hex: 'HEX', rgb: 'RGB', hsl: 'HSL' };
 
 function getScreenPermissionStatus() {
   if (process.platform !== 'darwin') return 'granted';
@@ -52,9 +55,17 @@ function createOverlay() {
     },
   });
 
-  overlayWindow.setIgnoreMouseEvents(false);
   overlayWindow.loadFile(path.join(__dirname, 'overlay.html'));
+  overlayWindow.once('ready-to-show', () => overlayWindow.focus());
+
+  globalShortcut.register('F', () => {
+    const next = CYCLE_FORMATS[getCopyFormat()] ?? 'hex';
+    setCopyFormat(next);
+    showFormatToast(FORMAT_LABELS[next], screen.getCursorScreenPoint());
+  });
+
   overlayWindow.on('closed', () => {
+    globalShortcut.unregister('F');
     overlayWindow = null;
   });
 }
@@ -75,9 +86,7 @@ function toggleOverlay() {
 }
 
 function setupIpc() {
-  ipcMain.handle('get-region', async (_, { x, y }) => {
-    return await getRegionAt(x, y);
-  });
+  ipcMain.handle('get-region', (_, { x, y }) => getRegionAt(x, y));
 
   ipcMain.handle('copy-and-close', (_, { hex, rgb, hsl }) => {
     const format = getCopyFormat();
@@ -101,9 +110,7 @@ function setupIpc() {
   ipcMain.handle('set-format', (_, format) => setCopyFormat(format));
 
   ipcMain.handle('show-format-toast', (_, format) => {
-    const labels = { hex: 'HEX', rgb: 'RGB', hsl: 'HSL' };
-    const point = screen.getCursorScreenPoint();
-    showFormatToast(labels[format], point);
+    showFormatToast(FORMAT_LABELS[format], screen.getCursorScreenPoint());
   });
 }
 

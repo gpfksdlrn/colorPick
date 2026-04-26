@@ -86,6 +86,45 @@
         opacity: 0.4;
         font-family: monospace;
       }
+
+      .divider {
+        border: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        margin: 20px 0 16px;
+      }
+
+      .shortcut-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 14px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+      }
+
+      .shortcut-row:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .shortcut-desc {
+        font-size: 13px;
+        opacity: 0.75;
+      }
+
+      .shortcut-keys {
+        display: flex;
+        gap: 4px;
+      }
+
+      kbd {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        padding: 2px 7px;
+        font-family: monospace;
+        font-size: 11px;
+        color: white;
+      }
     </style>
   </head>
   <body>
@@ -112,6 +151,34 @@
       <div class="option-info">
         <div class="option-title">HSL</div>
         <div class="option-example">hsl(60, 87%, 48%)</div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+    <h2>단축키</h2>
+
+    <div class="shortcut-row">
+      <span class="shortcut-desc">컬러피커 열기 / 닫기</span>
+      <div class="shortcut-keys">
+        <kbd>⌘</kbd><kbd>⇧</kbd><kbd>C</kbd>
+      </div>
+    </div>
+    <div class="shortcut-row">
+      <span class="shortcut-desc">색상 복사 후 닫기</span>
+      <div class="shortcut-keys">
+        <kbd>Click</kbd>
+      </div>
+    </div>
+    <div class="shortcut-row">
+      <span class="shortcut-desc">포맷 순환 (HEX → RGB → HSL)</span>
+      <div class="shortcut-keys">
+        <kbd>F</kbd>
+      </div>
+    </div>
+    <div class="shortcut-row">
+      <span class="shortcut-desc">닫기</span>
+      <div class="shortcut-keys">
+        <kbd>Esc</kbd>
       </div>
     </div>
 

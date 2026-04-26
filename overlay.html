@@ -67,9 +67,42 @@
         flex-direction: column;
         gap: 2px;
       }
+
+      #hint-banner {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: rgba(255, 255, 255, 0.75);
+        font-family: monospace;
+        font-size: 12px;
+        padding: 8px 18px;
+        border-radius: 8px;
+        pointer-events: none;
+        display: flex;
+        gap: 18px;
+        opacity: 1;
+        transition: opacity 0.6s ease;
+      }
+
+      #hint-banner.hidden {
+        opacity: 0;
+      }
+
+      .hint-key {
+        color: white;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
+    <div id="hint-banner">
+      <span><span class="hint-key">Click</span> 복사</span>
+      <span><span class="hint-key">F</span> 포맷 변경</span>
+      <span><span class="hint-key">Esc</span> 닫기</span>
+    </div>
+
     <div id="magnifier">
       <canvas id="canvas"></canvas>
       <div id="hex-label">
@@ -90,6 +123,8 @@
       const ctx = canvas.getContext('2d');
       const hexText = document.getElementById('hex-text');
       const colorDot = document.getElementById('color-dot');
+      const rgbText = document.getElementById('rgb-text');
+      const hslText = document.getElementById('hsl-text');
 
       const GRID = 11;
       const CELL = 10;
@@ -131,23 +166,19 @@
         hexText.textContent = hex;
         colorDot.style.background = hex;
 
-        document.getElementById('rgb-text').textContent =
-          `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-        document.getElementById('hsl-text').textContent =
-          `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+        rgbText.textContent = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+        hslText.textContent = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
       }
-
-      document.addEventListener('mousemove', (e) => {
-        magnifier.style.display = 'flex';
-        magnifier.style.left = `${e.clientX}px`;
-        magnifier.style.top = `${e.clientY}px`;
-      });
 
       let lastCall = 0;
       let isPending = false;
       const THROTTLE = 33;
 
       document.addEventListener('mousemove', async (e) => {
+        magnifier.style.display = 'flex';
+        magnifier.style.left = `${e.clientX}px`;
+        magnifier.style.top = `${e.clientY}px`;
+
         const now = Date.now();
         if (now - lastCall < THROTTLE || isPending) return;
         lastCall = now;
@@ -179,6 +210,10 @@
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') ipcRenderer.invoke('close-overlay');
       });
+
+      // 힌트 배너 3초 후 페이드아웃
+      const hintBanner = document.getElementById('hint-banner');
+      setTimeout(() => hintBanner.classList.add('hidden'), 3000);
     </script>
   </body>
 </html>
