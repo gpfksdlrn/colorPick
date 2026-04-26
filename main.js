@@ -1,11 +1,20 @@
-const { app, globalShortcut, desktopCapturer, systemPreferences } = require('electron');
+const { app, globalShortcut, desktopCapturer, systemPreferences, ipcMain } = require('electron');
 const { toggleOverlay, setupIpc } = require('./overlay');
 const { createTray } = require('./tray');
+const { getShortcut, setShortcut } = require('./setting');
 
 if (app.dock) app.dock.hide();
 
+let currentShortcut = null;
+
+function registerShortcut(accelerator) {
+  if (currentShortcut) globalShortcut.unregister(currentShortcut);
+  const ok = globalShortcut.register(accelerator, toggleOverlay);
+  if (ok) currentShortcut = accelerator;
+  return ok;
+}
+
 app.whenReady().then(async () => {
-  // macOS TCC 화면 녹화 목록에 앱 등록 (granted가 아닐 때만)
   if (process.platform === 'darwin') {
     const status = systemPreferences.getMediaAccessStatus('screen');
     if (status !== 'granted') {
@@ -16,8 +25,14 @@ app.whenReady().then(async () => {
   }
 
   setupIpc();
+  registerShortcut(getShortcut());
 
-  globalShortcut.register('CommandOrControl+Shift+C', toggleOverlay);
+  ipcMain.handle('get-shortcut', () => getShortcut());
+  ipcMain.handle('update-shortcut', (_, accelerator) => {
+    const ok = registerShortcut(accelerator);
+    if (ok) setShortcut(accelerator);
+    return ok;
+  });
 
   createTray(toggleOverlay, () => app.quit());
   toggleOverlay();
@@ -27,7 +42,6 @@ app.on('will-quit', () => {
   globalShortcut.unregisterAll();
 });
 
-// 창 다 닫혀도 앱 유지 (트레이에서 계속 실행)
 app.on('window-all-closed', (e) => {
   e.preventDefault();
 });

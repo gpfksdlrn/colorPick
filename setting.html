@@ -125,6 +125,60 @@
         font-size: 11px;
         color: white;
       }
+
+      .shortcut-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .edit-btn, .save-btn, .cancel-btn {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 5px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        font-family: -apple-system, sans-serif;
+        transition: background 0.15s;
+      }
+
+      .edit-btn {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .edit-btn:hover { background: rgba(255, 255, 255, 0.15); color: white; }
+
+      .save-btn {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+      }
+      .save-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.25); }
+      .save-btn:disabled { opacity: 0.3; cursor: default; }
+
+      .cancel-btn {
+        background: transparent;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .cancel-btn:hover { color: white; background: rgba(255, 255, 255, 0.08); }
+
+      .capture-display {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        font-family: monospace;
+        color: rgba(255, 255, 255, 0.35);
+        font-style: italic;
+        min-width: 80px;
+      }
+      .capture-display.has-key { color: white; font-style: normal; }
+
+      .error-msg {
+        font-size: 11px;
+        color: rgba(255, 90, 90, 0.9);
+        padding: 2px 14px 6px;
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -157,12 +211,22 @@
     <hr class="divider" />
     <h2>단축키</h2>
 
-    <div class="shortcut-row">
+    <div class="shortcut-row" id="toggle-row">
       <span class="shortcut-desc">컬러피커 열기 / 닫기</span>
-      <div class="shortcut-keys">
-        <kbd>⌘</kbd><kbd>⇧</kbd><kbd>C</kbd>
+      <div class="shortcut-right">
+        <div class="shortcut-keys" id="toggle-keys"></div>
+        <button class="edit-btn" id="edit-btn">편집</button>
       </div>
     </div>
+    <div class="shortcut-row" id="capture-row" style="display:none">
+      <span class="shortcut-desc">컬러피커 열기 / 닫기</span>
+      <div class="shortcut-right">
+        <div class="capture-display" id="capture-display">키를 누르세요...</div>
+        <button class="save-btn" id="save-btn" disabled>저장</button>
+        <button class="cancel-btn" id="cancel-btn">취소</button>
+      </div>
+    </div>
+    <div class="error-msg" id="error-msg">이미 사용 중인 단축키예요.</div>
     <div class="shortcut-row">
       <span class="shortcut-desc">색상 복사 후 닫기</span>
       <div class="shortcut-keys">
@@ -185,24 +249,103 @@
     <script>
       const { ipcRenderer } = require('electron');
 
-      // 현재 설정 불러오기
+      // ── 복사 포맷 ───────────────────────────────────────────
       ipcRenderer.invoke('get-format').then((format) => {
-        document
-          .querySelector(`[data-format="${format}"]`)
-          ?.classList.add('selected');
+        document.querySelector(`[data-format="${format}"]`)?.classList.add('selected');
       });
 
-      // 클릭 시 설정 변경
       document.querySelectorAll('.option').forEach((el) => {
         el.addEventListener('click', async () => {
-          document
-            .querySelectorAll('.option')
-            .forEach((o) => o.classList.remove('selected'));
+          document.querySelectorAll('.option').forEach((o) => o.classList.remove('selected'));
           el.classList.add('selected');
           await ipcRenderer.invoke('set-format', el.dataset.format);
           await ipcRenderer.invoke('show-format-toast', el.dataset.format);
           window.close();
         });
+      });
+
+      // ── 단축키 편집 ─────────────────────────────────────────
+      const isMac = navigator.platform.includes('Mac');
+
+      function accelToKbdHtml(accel) {
+        return accel.split('+').map((part) => {
+          if (part === 'CommandOrControl') return `<kbd>${isMac ? '⌘' : 'Ctrl'}</kbd>`;
+          if (part === 'Shift') return `<kbd>⇧</kbd>`;
+          if (part === 'Alt') return `<kbd>${isMac ? '⌥' : 'Alt'}</kbd>`;
+          return `<kbd>${part}</kbd>`;
+        }).join('');
+      }
+
+      function keyEventToAccel(e) {
+        const mods = [];
+        if (e.metaKey || e.ctrlKey) mods.push('CommandOrControl');
+        if (e.shiftKey) mods.push('Shift');
+        if (e.altKey) mods.push('Alt');
+
+        const ignored = new Set(['Meta', 'Control', 'Shift', 'Alt', 'AltGraph']);
+        if (ignored.has(e.key) || mods.length === 0) return null;
+
+        let key = e.key;
+        if (key === ' ') key = 'Space';
+        else if (key === '+') key = 'Plus';
+        else if (key.length === 1) key = key.toUpperCase();
+
+        return [...mods, key].join('+');
+      }
+
+      const toggleRow = document.getElementById('toggle-row');
+      const toggleKeys = document.getElementById('toggle-keys');
+      const editBtn = document.getElementById('edit-btn');
+      const captureRow = document.getElementById('capture-row');
+      const captureDisplay = document.getElementById('capture-display');
+      const saveBtn = document.getElementById('save-btn');
+      const cancelBtn = document.getElementById('cancel-btn');
+      const errorMsg = document.getElementById('error-msg');
+
+      let pendingAccel = null;
+
+      ipcRenderer.invoke('get-shortcut').then((accel) => {
+        toggleKeys.innerHTML = accelToKbdHtml(accel);
+      });
+
+      editBtn.addEventListener('click', () => {
+        pendingAccel = null;
+        captureDisplay.innerHTML = '키를 누르세요...';
+        captureDisplay.classList.remove('has-key');
+        saveBtn.disabled = true;
+        errorMsg.style.display = 'none';
+        toggleRow.style.display = 'none';
+        captureRow.style.display = 'flex';
+        document.addEventListener('keydown', onCapture);
+      });
+
+      function onCapture(e) {
+        e.preventDefault();
+        const accel = keyEventToAccel(e);
+        if (!accel) return;
+        pendingAccel = accel;
+        captureDisplay.innerHTML = accelToKbdHtml(accel);
+        captureDisplay.classList.add('has-key');
+        saveBtn.disabled = false;
+      }
+
+      function exitCapture() {
+        document.removeEventListener('keydown', onCapture);
+        captureRow.style.display = 'none';
+        toggleRow.style.display = 'flex';
+      }
+
+      cancelBtn.addEventListener('click', exitCapture);
+
+      saveBtn.addEventListener('click', async () => {
+        if (!pendingAccel) return;
+        const ok = await ipcRenderer.invoke('update-shortcut', pendingAccel);
+        if (ok) {
+          toggleKeys.innerHTML = accelToKbdHtml(pendingAccel);
+          exitCapture();
+        } else {
+          errorMsg.style.display = 'block';
+        }
       });
     </script>
   </body>
