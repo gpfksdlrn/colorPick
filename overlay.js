@@ -2,7 +2,8 @@ const { BrowserWindow, screen, ipcMain, clipboard, systemPreferences, dialog, sh
 const path = require('path');
 const { getRegionAt } = require('./colorPicker');
 const { showToast, showFormatToast } = require('./toast');
-const { getCopyFormat, setCopyFormat } = require('./setting');
+const { getCopyFormat, setCopyFormat, addToHistory } = require('./setting');
+const { updateTray } = require('./tray');
 
 let overlayWindow = null;
 
@@ -96,6 +97,8 @@ function setupIpc() {
     else text = hex;
 
     clipboard.writeText(text);
+    addToHistory({ value: text, hex });
+    updateTray();
     const point = screen.getCursorScreenPoint();
     if (overlayWindow) overlayWindow.close();
     showToast(text, point);
