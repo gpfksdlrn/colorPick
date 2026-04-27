@@ -23,6 +23,7 @@
       "target": "dmg",
       "icon": "assets/icon.icns",
       "identity": null,
+      "artifactName": "ColorPick-mac.dmg",
       "extendInfo": {
         "NSScreenCaptureUsageDescription": "색상 추출을 위해 화면 녹화 권한이 필요합니다."
       }
@@ -39,7 +40,8 @@
     ],
     "win": {
       "target": "portable",
-      "icon": "assets/icon.ico"
+      "icon": "assets/icon.ico",
+      "artifactName": "ColorPick-win.exe"
     },
     "publish": null
   }
