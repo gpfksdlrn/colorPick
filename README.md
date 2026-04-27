@@ -116,5 +116,5 @@ HEX / RGB / HSL 포맷으로 즉시 복사할 수 있는 크로스 플랫폼 데
 
 ## 🔗 다운로드
 
-* [macOS 다운로드](https://github.com/gpfksdlrn/colorPick/releases/latest/download/ColorPick-mac.dmg)
+* [macOS 다운로드](https://github.com/gpfksdlrn/colorPick/actions/runs/24989335924/artifacts/6658257722)
 * [Windows 다운로드](https://github.com/gpfksdlrn/colorPick/releases/latest/download/ColorPick-win.exe)
