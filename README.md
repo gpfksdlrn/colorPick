@@ -102,9 +102,12 @@ HEX / RGB / HSL 포맷으로 즉시 복사할 수 있는 크로스 플랫폼 데
 
 ### macOS
 
-1. `.dmg` 다운로드 후 실행
-2. "확인되지 않은 개발자" 경고 시
-   → Finder에서 앱 우클릭 → 열기
+1. `.dmg` 다운로드 후 설치
+2. "손상되었기 때문에 열 수 없습니다" 오류 시 터미널에서 실행:
+   ```bash
+   xattr -cr /Applications/ColorPick.app
+   ```
+3. 이후 앱을 다시 실행하면 정상 작동합니다.
 
 ### Windows
 
@@ -116,5 +119,5 @@ HEX / RGB / HSL 포맷으로 즉시 복사할 수 있는 크로스 플랫폼 데
 
 ## 🔗 다운로드
 
-* [macOS 다운로드](https://github.com/gpfksdlrn/colorPick/actions/runs/24989335924/artifacts/6658257722)
+* [macOS 다운로드](https://github.com/gpfksdlrn/colorPick/releases/latest/download/ColorPick-mac.dmg)
 * [Windows 다운로드](https://github.com/gpfksdlrn/colorPick/releases/latest/download/ColorPick-win.exe)
