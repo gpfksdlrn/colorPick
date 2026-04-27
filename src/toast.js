@@ -35,7 +35,7 @@ function createToastWindow(cursorPoint) {
   const { x: dx, y: dy, width, height } = display.workArea;
   toast.setPosition(dx + Math.floor((width - 300) / 2), dy + height - 80);
 
-  toast.loadFile(path.join(__dirname, 'toast.html'));
+  toast.loadFile(path.join(__dirname, '../renderer/toast.html'));
 
   setTimeout(() => {
     if (!toast.isDestroyed()) toast.close();

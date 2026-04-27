@@ -25,7 +25,7 @@ function openSettings() {
     },
   });
 
-  settingsWindow.loadFile(path.join(__dirname, 'setting.html'));
+  settingsWindow.loadFile(path.join(__dirname, '../renderer/setting.html'));
   settingsWindow.on('closed', () => {
     settingsWindow = null;
   });
@@ -85,7 +85,7 @@ function createTray(onToggle, onQuit) {
   _onQuit = onQuit;
 
   const icon = nativeImage.createFromPath(
-    path.join(__dirname, 'Logo', 'tray-iconTemplate.png'),
+    path.join(__dirname, '../assets/tray-iconTemplate.png'),
   );
   if (process.platform === 'darwin') icon.setTemplateImage(true);
   tray = new Tray(icon);

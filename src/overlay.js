@@ -56,7 +56,7 @@ function createOverlay() {
     },
   });
 
-  overlayWindow.loadFile(path.join(__dirname, 'overlay.html'));
+  overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
   overlayWindow.once('ready-to-show', () => overlayWindow.focus());
 
   globalShortcut.register('F', () => {

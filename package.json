@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "화면 어디서든 색상을 추출하는 데스크탑 툴",
   "author": "Hyeran Mun",
-  "main": "main.js",
+  "main": "src/main.js",
   "devDependencies": {
     "electron": "^41.3.0",
     "electron-builder": "^26.8.1"
@@ -21,25 +21,25 @@
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dmg",
-      "icon": "icon.icns",
+      "icon": "assets/icon.icns",
       "identity": null,
       "extendInfo": {
         "NSScreenCaptureUsageDescription": "색상 추출을 위해 화면 녹화 권한이 필요합니다."
       }
     },
     "asarUnpack": [
-      "Logo/tray-iconTemplate.png",
-      "Logo/tray-iconTemplate@2x.png"
+      "assets/tray-iconTemplate.png",
+      "assets/tray-iconTemplate@2x.png"
     ],
     "files": [
-      "*.js",
-      "*.html",
-      "Logo/*",
-      "icon.*"
+      "src/*.js",
+      "renderer/*.html",
+      "assets/icon.{icns,ico}",
+      "assets/tray-iconTemplate*"
     ],
     "win": {
       "target": "portable",
-      "icon": "icon.ico"
+      "icon": "assets/icon.ico"
     },
     "publish": null
   }
