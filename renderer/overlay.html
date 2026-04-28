@@ -82,7 +82,7 @@
         pointer-events: none;
         display: flex;
         gap: 18px;
-        opacity: 1;
+        opacity: 0;
         transition: opacity 0.6s ease;
       }
 
@@ -213,13 +213,25 @@
         }
       });
 
+      const hintBanner = document.getElementById('hint-banner');
+      let hintShown = false;
+      document.addEventListener('mouseenter', () => {
+        ipcRenderer.invoke('focus-overlay');
+        if (!hintShown) {
+          hintShown = true;
+          hintBanner.style.opacity = '1';
+          setTimeout(() => { hintBanner.style.opacity = '0'; }, 3000);
+        }
+      });
+
+      document.addEventListener('mouseleave', () => {
+        magnifier.style.display = 'none';
+      });
+
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') ipcRenderer.invoke('close-overlay');
       });
 
-      // 힌트 배너 3초 후 페이드아웃
-      const hintBanner = document.getElementById('hint-banner');
-      setTimeout(() => hintBanner.classList.add('hidden'), 3000);
     </script>
   </body>
 </html>

@@ -5,7 +5,7 @@ const { showToast, showFormatToast } = require('./toast');
 const { getCopyFormat, setCopyFormat, addToHistory } = require('./setting');
 const { updateTray } = require('./tray');
 
-let overlayWindow = null;
+let overlayWindows = [];
 
 const CYCLE_FORMATS = { hex: 'rgb', rgb: 'hsl', hsl: 'hex' };
 const FORMAT_LABELS = { hex: 'HEX', rgb: 'RGB', hsl: 'HSL' };
@@ -34,32 +34,51 @@ async function showPermissionDialog() {
   }
 }
 
+function closeAllOverlays() {
+  overlayWindows.forEach((win) => { if (!win.isDestroyed()) win.close(); });
+}
+
 function createOverlay() {
   const point = screen.getCursorScreenPoint();
-  const display = screen.getDisplayNearestPoint(point);
-  const { x, y, width, height } = display.bounds;
+  const displays = screen.getAllDisplays();
 
   getRegionAt(point.x, point.y).catch(() => {});
 
-  overlayWindow = new BrowserWindow({
-    x,
-    y,
-    width,
-    height,
-    transparent: true,
-    frame: false,
-    alwaysOnTop: true,
-    hasShadow: false,
-    skipTaskbar: true,
-    backgroundColor: '#00000000',
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
-  });
+  displays.forEach((display) => {
+    const { x, y, width, height } = display.bounds;
+    const win = new BrowserWindow({
+      x,
+      y,
+      width,
+      height,
+      transparent: true,
+      frame: false,
+      alwaysOnTop: true,
+      hasShadow: false,
+      skipTaskbar: true,
+      backgroundColor: '#00000000',
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false,
+      },
+    });
 
-  overlayWindow.loadFile(path.join(__dirname, '../renderer/overlay.html'));
-  overlayWindow.once('ready-to-show', () => overlayWindow.focus());
+    win.loadFile(path.join(__dirname, '../renderer/overlay.html'));
+
+    if (display.id === screen.getDisplayNearestPoint(point).id) {
+      win.once('ready-to-show', () => win.focus());
+    }
+
+    win.on('closed', () => {
+      overlayWindows = overlayWindows.filter((w) => w !== win);
+      if (overlayWindows.length === 0) {
+        globalShortcut.unregister('F');
+        updateTray(false);
+      }
+    });
+
+    overlayWindows.push(win);
+  });
 
   globalShortcut.register('F', () => {
     const next = CYCLE_FORMATS[getCopyFormat()] ?? 'hex';
@@ -68,17 +87,11 @@ function createOverlay() {
   });
 
   updateTray(true);
-
-  overlayWindow.on('closed', () => {
-    globalShortcut.unregister('F');
-    overlayWindow = null;
-    updateTray(false);
-  });
 }
 
 function toggleOverlay() {
-  if (overlayWindow) {
-    overlayWindow.close();
+  if (overlayWindows.length > 0) {
+    closeAllOverlays();
     return;
   }
 
@@ -105,12 +118,15 @@ function setupIpc() {
     addToHistory({ value: text, hex });
     updateTray();
     const point = screen.getCursorScreenPoint();
-    if (overlayWindow) overlayWindow.close();
+    closeAllOverlays();
     showToast(text, point);
   });
 
-  ipcMain.handle('close-overlay', () => {
-    if (overlayWindow) overlayWindow.close();
+  ipcMain.handle('close-overlay', () => closeAllOverlays());
+
+  ipcMain.handle('focus-overlay', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) win.focus();
   });
 
   ipcMain.handle('get-format', () => getCopyFormat());
