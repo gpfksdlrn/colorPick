@@ -64,11 +64,11 @@ function createColorIcon(hex) {
   return nativeImage.createFromBuffer(buf, { width: size, height: size });
 }
 
-function buildMenu() {
+function buildMenu(isActive = false) {
   const history = getHistory();
 
   const template = [
-    { label: '스포이드 실행', click: _onToggle },
+    { label: isActive ? '스포이드 중지' : '스포이드 실행', click: _onToggle },
     { type: 'separator' },
     { label: '설정', click: openSettings },
     { label: '피드백 남기기', click: () => shell.openExternal(FEEDBACK_URL) },
@@ -91,8 +91,8 @@ function buildMenu() {
   return Menu.buildFromTemplate(template);
 }
 
-function updateTray() {
-  if (tray) tray.setContextMenu(buildMenu());
+function updateTray(isActive = false) {
+  if (tray) tray.setContextMenu(buildMenu(isActive));
 }
 
 function createTray(onToggle, onQuit) {

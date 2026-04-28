@@ -67,9 +67,12 @@ function createOverlay() {
     showFormatToast(FORMAT_LABELS[next], screen.getCursorScreenPoint());
   });
 
+  updateTray(true);
+
   overlayWindow.on('closed', () => {
     globalShortcut.unregister('F');
     overlayWindow = null;
+    updateTray(false);
   });
 }
 
