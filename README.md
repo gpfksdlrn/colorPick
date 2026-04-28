@@ -121,3 +121,14 @@ HEX / RGB / HSL 포맷으로 즉시 복사할 수 있는 크로스 플랫폼 데
 
 * [macOS 다운로드](https://github.com/gpfksdlrn/colorPick/releases/latest/download/ColorPick-mac.dmg)
 * [Windows 다운로드](https://github.com/gpfksdlrn/colorPick/releases/latest/download/ColorPick-win.exe)
+
+---
+
+## 💬 피드백 남기기
+
+🚀 사용자 피드백을 적극 반영 중입니다.
+
+ColorPick을 더 좋게 만들고 싶습니다.  
+작은 불편함이라도 좋으니 편하게 남겨주세요. 🙌
+
+👉 [피드백 남기기](https://forms.gle/V5K8TFWAjE6mzebF9)

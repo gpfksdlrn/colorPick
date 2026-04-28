@@ -4,9 +4,12 @@ const {
   nativeImage,
   BrowserWindow,
   clipboard,
+  shell,
 } = require('electron');
 const path = require('path');
 const { getHistory } = require('./setting');
+
+const FEEDBACK_URL = 'https://forms.gle/V5K8TFWAjE6mzebF9';
 
 let tray = null;
 let settingsWindow = null;
@@ -66,7 +69,9 @@ function buildMenu() {
 
   const template = [
     { label: '스포이드 실행', click: _onToggle },
+    { type: 'separator' },
     { label: '설정', click: openSettings },
+    { label: '피드백 남기기', click: () => shell.openExternal(FEEDBACK_URL) },
     { type: 'separator' },
   ];
 
