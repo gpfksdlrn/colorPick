@@ -5,6 +5,7 @@ const {
   BrowserWindow,
   clipboard,
   shell,
+  screen,
 } = require('electron');
 const path = require('path');
 const { getHistory } = require('./setting');
@@ -22,9 +23,15 @@ function openSettings() {
     return;
   }
 
+  const { x: dx, y: dy, width, height } = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
+  const winW = 420;
+  const winH = 560;
+
   settingsWindow = new BrowserWindow({
-    width: 420,
-    height: 560,
+    width: winW,
+    height: winH,
+    x: dx + Math.floor((width - winW) / 2),
+    y: dy + Math.floor((height - winH) / 2),
     frame: true,
     resizable: false,
     title: '설정',
