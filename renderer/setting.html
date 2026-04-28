@@ -260,7 +260,6 @@
           el.classList.add('selected');
           await ipcRenderer.invoke('set-format', el.dataset.format);
           await ipcRenderer.invoke('show-format-toast', el.dataset.format);
-          window.close();
         });
       });
 
