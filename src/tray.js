@@ -1,4 +1,10 @@
-const { Tray, Menu, nativeImage, BrowserWindow, clipboard } = require('electron');
+const {
+  Tray,
+  Menu,
+  nativeImage,
+  BrowserWindow,
+  clipboard,
+} = require('electron');
 const path = require('path');
 const { getHistory } = require('./setting');
 
@@ -15,7 +21,7 @@ function openSettings() {
 
   settingsWindow = new BrowserWindow({
     width: 380,
-    height: 550,
+    height: 560,
     frame: true,
     resizable: false,
     title: '설정',
@@ -32,7 +38,8 @@ function openSettings() {
 }
 
 function createColorIcon(hex) {
-  if (!hex || typeof hex !== 'string' || hex.length < 7) return nativeImage.createEmpty();
+  if (!hex || typeof hex !== 'string' || hex.length < 7)
+    return nativeImage.createEmpty();
   const size = 16;
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -44,7 +51,10 @@ function createColorIcon(hex) {
     for (let x = 0; x < size; x++) {
       if ((x - cx) ** 2 + (y - cy) ** 2 <= 36) {
         const i = (y * size + x) * 4;
-        buf[i] = b; buf[i + 1] = g; buf[i + 2] = r; buf[i + 3] = 255;
+        buf[i] = b;
+        buf[i + 1] = g;
+        buf[i + 2] = r;
+        buf[i + 3] = 255;
       }
     }
   }

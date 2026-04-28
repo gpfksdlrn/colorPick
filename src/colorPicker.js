@@ -55,8 +55,7 @@ function rgbToHsl(r, g, b) {
 }
 
 async function getRegionAt(x, y, size = 11) {
-  const point = { x, y };
-  const display = screen.getDisplayNearestPoint(point);
+  const display = screen.getDisplayNearestPoint({ x, y });
   const scaleFactor = display.scaleFactor;
 
   const sources = await getSources(display);

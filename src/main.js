@@ -1,4 +1,6 @@
-const { app, globalShortcut, desktopCapturer, systemPreferences, ipcMain } = require('electron');
+const { app, globalShortcut, desktopCapturer, systemPreferences, ipcMain, Menu } = require('electron');
+
+Menu.setApplicationMenu(null);
 const { toggleOverlay, setupIpc } = require('./overlay');
 const { createTray } = require('./tray');
 const { getShortcut, setShortcut } = require('./setting');
@@ -14,7 +16,7 @@ function registerShortcut(accelerator) {
   return ok;
 }
 
-app.whenReady().then(async () => {
+app.whenReady().then(() => {
   if (process.platform === 'darwin') {
     const status = systemPreferences.getMediaAccessStatus('screen');
     if (status !== 'granted') {

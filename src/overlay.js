@@ -39,6 +39,8 @@ function createOverlay() {
   const display = screen.getDisplayNearestPoint(point);
   const { x, y, width, height } = display.bounds;
 
+  getRegionAt(point.x, point.y).catch(() => {});
+
   overlayWindow = new BrowserWindow({
     x,
     y,

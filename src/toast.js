@@ -33,8 +33,9 @@ function createToastWindow(cursorPoint) {
 
   const display = screen.getDisplayNearestPoint(cursorPoint);
   const { x: dx, y: dy, width, height } = display.workArea;
+  
   toast.setPosition(dx + Math.floor((width - 300) / 2), dy + height - 80);
-
+  toast.setAlwaysOnTop(true, 'screen-saver');
   toast.loadFile(path.join(__dirname, '../renderer/toast.html'));
 
   setTimeout(() => {
