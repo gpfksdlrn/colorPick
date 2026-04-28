@@ -20,7 +20,7 @@ function openSettings() {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 380,
+    width: 420,
     height: 560,
     frame: true,
     resizable: false,
