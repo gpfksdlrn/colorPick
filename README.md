@@ -4,8 +4,10 @@
 [![Download macOS](https://img.shields.io/badge/Download-macOS-black?style=flat-square&logo=apple)](https://github.com/gpfksdlrn/colorPick/releases/latest/download/ColorPick-mac.dmg)
 [![Download Windows](https://img.shields.io/badge/Download-Windows-blue?style=flat-square&logo=windows)](https://github.com/gpfksdlrn/colorPick/releases/latest/download/ColorPick-win.exe)
 
-디자인 작업이나 개발 중 화면에 보이는 색상을 빠르게 추출하고 싶지만,
-기본 도구는 접근성이 떨어지고 포맷 변환이 번거롭습니다.
+디자인 작업이나 개발 중 화면에 보이는 색상을 빠르게 추출하고 싶을 때가
+많은데, 매번 웹 컬러피커 사이트를 열거나 기본 스포이드로 뽑은 값을
+복사하려면 잘 안 돼서 눈으로 보고 다시 타이핑해야 했습니다. 이 번거로움을
+줄이려고 직접 만들었습니다.
 
 **ColorPick은 전역 단축키로 어디서든 색상을 추출하고,
 HEX / RGB / HSL 포맷으로 즉시 복사할 수 있는 크로스 플랫폼 데스크탑 툴입니다.**
@@ -48,12 +50,17 @@ https://github.com/user-attachments/assets/8d8b660c-d45d-48f9-835f-e19ff2b776e9
 * **Electron**
 
   * macOS / Windows 크로스 플랫폼 지원
+  * 네이티브 언어(Swift/C#) 없이도 이미 익숙한 JS로 데스크톱 앱을 빠르게
+    완성할 수 있어서 선택
+
 * **Node.js**
 
   * 시스템 API 접근 및 클립보드 제어
+
 * **HTML / CSS / JavaScript**
 
-  * UI 구성
+  * UI 구성 — 별도 프레임워크 없이도 오버레이/트레이 UI 정도는 충분히
+    구현 가능해서 러닝 커브와 번들 크기를 줄이기 위해 순수 JS로 유지
 
 ---
 
