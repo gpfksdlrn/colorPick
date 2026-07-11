@@ -14,8 +14,7 @@ HEX / RGB / HSL 포맷으로 즉시 복사할 수 있는 크로스 플랫폼 데
 
 ## 🖥 Preview
 
-<img width="1152" height="648" alt="커서를 따라" src="https://github.com/user-attachments/assets/65ba7442-d66a-4d1f-9b43-56713f146309" />
-
+https://github.com/user-attachments/assets/8d8b660c-d45d-48f9-835f-e19ff2b776e9
 
 ---
 
