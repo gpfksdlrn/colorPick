@@ -35,7 +35,7 @@ HEX / RGB / HSL 포맷으로 즉시 복사할 수 있는 크로스 플랫폼 데
 
 * [Preview](#-preview)
 * [주요 기능](#-주요-기능)
-* [단축키](#-단축키)
+* [단축키](https://github.com/gpfksdlrn/colorPick/blob/main/README.md#%EF%B8%8F-%EB%8B%A8%EC%B6%95%ED%82%A4)
 * [기술 스택](#-기술-스택)
 * [UI/UX 의사결정](#-uiux-의사결정)
 * [개발 방식 — AI와의 협업](#-개발-방식--ai와의-협업)
