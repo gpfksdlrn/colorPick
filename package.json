@@ -31,7 +31,8 @@
     },
     "asarUnpack": [
       "assets/tray-iconTemplate.png",
-      "assets/tray-iconTemplate@2x.png"
+      "assets/tray-iconTemplate@2x.png",
+      "node_modules/screenshot-desktop/lib/win32/**"
     ],
     "files": [
       "src/*.js",
