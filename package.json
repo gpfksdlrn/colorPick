@@ -32,11 +32,13 @@
     "asarUnpack": [
       "assets/tray-iconTemplate.png",
       "assets/tray-iconTemplate@2x.png",
-      "node_modules/screenshot-desktop/lib/win32/**"
+      "node_modules/screenshot-desktop/lib/win32/**",
+      "resources/win-color-correct.ps1"
     ],
     "files": [
       "src/*.js",
       "renderer/*.html",
+      "resources/win-color-correct.ps1",
       "assets/icon.{icns,ico}",
       "assets/tray-iconTemplate*"
     ],

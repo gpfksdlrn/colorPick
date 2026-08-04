@@ -35,10 +35,53 @@ function macScreenCapture(screenIndex, outPath) {
   });
 }
 
-async function captureBuffer(screenIndex) {
-  if (process.platform !== 'darwin') {
-    // TODO: Windows는 Windows Color System 기반 보정이 필요 — 아직 미구현.
-    return screenshot({ screen: screenIndex, format: 'png' });
+// mac의 sips에 대응 — 모니터별 ICC 프로파일을 GetICMProfile로 찾아 sRGB로 매칭시킨다(resources/win-color-correct.ps1).
+// 미검증 상태라 실패 시 보정 없이 원본 캡처로 폴백한다.
+const WIN_COLOR_SCRIPT = path.join(__dirname, '..', 'resources', 'win-color-correct.ps1');
+
+function winMatchToSrgb(inputPath, outputPath, deviceName) {
+  return new Promise((resolve, reject) => {
+    execFile(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        WIN_COLOR_SCRIPT,
+        '-InputPath',
+        inputPath,
+        '-OutputPath',
+        outputPath,
+        '-DeviceName',
+        deviceName,
+      ],
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      },
+    );
+  });
+}
+
+async function captureBuffer(screenIndex, deviceName) {
+  if (process.platform === 'win32') {
+    const rawBuffer = await screenshot({ screen: screenIndex, format: 'png' });
+    if (!deviceName) return rawBuffer;
+
+    const tmpIn = path.join(os.tmpdir(), `colorpick-${process.pid}-${screenIndex}-in.png`);
+    const tmpOut = path.join(os.tmpdir(), `colorpick-${process.pid}-${screenIndex}-out.png`);
+    try {
+      await fs.writeFile(tmpIn, rawBuffer);
+      await winMatchToSrgb(tmpIn, tmpOut, deviceName);
+      return await fs.readFile(tmpOut);
+    } catch (err) {
+      console.error('winMatchToSrgb 실패, 보정 없이 원본 사용:', err.message);
+      return rawBuffer;
+    } finally {
+      fs.unlink(tmpIn).catch(() => {});
+      fs.unlink(tmpOut).catch(() => {});
+    }
   }
 
   const tmpPath = path.join(
@@ -81,13 +124,13 @@ async function buildDisplayMap() {
           bestIdx = idx;
         }
       });
-      map.set(d.id, bestIdx);
+      map.set(d.id, { index: bestIdx, name: shotDisplays[bestIdx]?.name });
     });
   } else {
     // mac listDisplays()는 좌표 정보가 없어 primary만 확실히 매칭되고, 나머지는 bounds.x 순서로 best-effort 매칭.
     const primaryElectron = screen.getPrimaryDisplay();
     const primaryShotIdx = shotDisplays.findIndex((s) => s.primary);
-    map.set(primaryElectron.id, primaryShotIdx >= 0 ? primaryShotIdx : 0);
+    map.set(primaryElectron.id, { index: primaryShotIdx >= 0 ? primaryShotIdx : 0 });
 
     const otherElectron = electronDisplays
       .filter((d) => d.id !== primaryElectron.id)
@@ -97,7 +140,7 @@ async function buildDisplayMap() {
       .filter((idx) => idx !== primaryShotIdx);
 
     otherElectron.forEach((d, i) => {
-      map.set(d.id, otherShotIdx[i] ?? 0);
+      map.set(d.id, { index: otherShotIdx[i] ?? 0 });
     });
   }
 
@@ -126,8 +169,8 @@ function refreshDisplay(display) {
   entry.promise = (async () => {
     try {
       const map = await getDisplayMap();
-      const screenIndex = map.get(display.id) ?? 0;
-      const buffer = await captureBuffer(screenIndex);
+      const { index: screenIndex, name: deviceName } = map.get(display.id) ?? { index: 0 };
+      const buffer = await captureBuffer(screenIndex, deviceName);
       entry.image = nativeImage.createFromBuffer(buffer);
       entry.time = Date.now();
       return entry.image;
