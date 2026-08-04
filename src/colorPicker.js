@@ -1,23 +1,159 @@
-const { desktopCapturer, screen } = require('electron');
+const { nativeImage, screen } = require('electron');
+const screenshot = require('screenshot-desktop');
+const { execFile } = require('child_process');
+const fs = require('fs/promises');
+const os = require('os');
+const path = require('path');
 
-const sourceCache = new Map();
-const CACHE_TTL = 50;
+// mousemove마다 새로 캡처하기엔 비용이 커서(200ms대) 이 주기 동안은 캐시된 이미지를 재사용한다.
+const CAPTURE_INTERVAL = 450; // ms — 실기기 테스트 후 조정 예정
 
-async function getSources(display) {
-  const now = Date.now();
-  const cached = sourceCache.get(display.id);
-  if (cached && now - cached.time < CACHE_TTL) return cached.sources;
+// 디스플레이별 ColorSync 프로파일(P3 등) 때문에 raw 픽셀이 CSS의 sRGB 값과 어긋난다 — sips로 sRGB에 매칭시켜 보정.
+const SRGB_PROFILE_MAC = '/System/Library/ColorSync/Profiles/sRGB Profile.icc';
 
-  const sources = await desktopCapturer.getSources({
-    types: ['screen'],
-    thumbnailSize: {
-      width: display.size.width * display.scaleFactor,
-      height: display.size.height * display.scaleFactor,
-    },
+function matchToSrgb(filePath) {
+  return new Promise((resolve, reject) => {
+    execFile('sips', ['--matchTo', SRGB_PROFILE_MAC, filePath], (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
   });
+}
 
-  sourceCache.set(display.id, { sources, time: now });
-  return sources;
+// screenshot-desktop의 screenshot()은 호출마다 system_profiler로 유효성 검사를 해서 느리다 —
+// screencapture -D로 직접 캡처해 우회하고, listDisplays()는 디스플레이 매핑에만 캐시해서 쓴다.
+function macScreenCapture(screenIndex, outPath) {
+  return new Promise((resolve, reject) => {
+    execFile(
+      'screencapture',
+      ['-x', '-t', 'png', '-D', String(screenIndex + 1), outPath],
+      (err) => {
+        if (err) reject(err);
+        else resolve();
+      },
+    );
+  });
+}
+
+async function captureBuffer(screenIndex) {
+  if (process.platform !== 'darwin') {
+    // TODO: Windows는 Windows Color System 기반 보정이 필요 — 아직 미구현.
+    return screenshot({ screen: screenIndex, format: 'png' });
+  }
+
+  const tmpPath = path.join(
+    os.tmpdir(),
+    `colorpick-${process.pid}-${screenIndex}-${Date.now()}.png`,
+  );
+  try {
+    await macScreenCapture(screenIndex, tmpPath);
+    await matchToSrgb(tmpPath);
+    return await fs.readFile(tmpPath);
+  } finally {
+    fs.unlink(tmpPath).catch(() => {});
+  }
+}
+
+const captureCache = new Map(); // electron display.id -> { time, pending, promise }
+
+let displayMap = null; // electron display.id -> screenshot-desktop screen index
+let displayMapTime = 0;
+const DISPLAY_MAP_TTL = 10_000; // 모니터 연결 변경 대비 주기적 재계산
+
+async function buildDisplayMap() {
+  const electronDisplays = screen.getAllDisplays();
+  const shotDisplays = await screenshot.listDisplays();
+  const map = new Map();
+
+  if (process.platform === 'win32') {
+    // win32는 listDisplays()가 left/top/width/height를 주므로 좌표로 정확히 매칭 가능.
+    electronDisplays.forEach((d) => {
+      let bestIdx = 0;
+      let bestScore = Infinity;
+      shotDisplays.forEach((s, idx) => {
+        const score =
+          Math.abs(d.bounds.x - s.left) +
+          Math.abs(d.bounds.y - s.top) +
+          Math.abs(d.bounds.width - s.width) +
+          Math.abs(d.bounds.height - s.height);
+        if (score < bestScore) {
+          bestScore = score;
+          bestIdx = idx;
+        }
+      });
+      map.set(d.id, bestIdx);
+    });
+  } else {
+    // mac listDisplays()는 좌표 정보가 없어 primary만 확실히 매칭되고, 나머지는 bounds.x 순서로 best-effort 매칭.
+    const primaryElectron = screen.getPrimaryDisplay();
+    const primaryShotIdx = shotDisplays.findIndex((s) => s.primary);
+    map.set(primaryElectron.id, primaryShotIdx >= 0 ? primaryShotIdx : 0);
+
+    const otherElectron = electronDisplays
+      .filter((d) => d.id !== primaryElectron.id)
+      .sort((a, b) => a.bounds.x - b.bounds.x);
+    const otherShotIdx = shotDisplays
+      .map((_, idx) => idx)
+      .filter((idx) => idx !== primaryShotIdx);
+
+    otherElectron.forEach((d, i) => {
+      map.set(d.id, otherShotIdx[i] ?? 0);
+    });
+  }
+
+  return map;
+}
+
+async function getDisplayMap() {
+  const now = Date.now();
+  if (displayMap && now - displayMapTime < DISPLAY_MAP_TTL) return displayMap;
+
+  displayMap = await buildDisplayMap();
+  displayMapTime = now;
+  return displayMap;
+}
+
+function refreshDisplay(display) {
+  const existing = captureCache.get(display.id);
+  if (existing?.pending) return existing.promise;
+
+  const entry = {
+    time: Date.now(),
+    pending: true,
+    image: existing?.image ?? null,
+    promise: null,
+  };
+  entry.promise = (async () => {
+    try {
+      const map = await getDisplayMap();
+      const screenIndex = map.get(display.id) ?? 0;
+      const buffer = await captureBuffer(screenIndex);
+      entry.image = nativeImage.createFromBuffer(buffer);
+      entry.time = Date.now();
+      return entry.image;
+    } finally {
+      entry.pending = false;
+    }
+  })();
+
+  captureCache.set(display.id, entry);
+  return entry.promise;
+}
+
+// stale-while-revalidate: 캐시가 있으면 즉시 반환하고 새 캡처는 백그라운드에서 갱신 — mousemove가 캡처 끝날 때까지 멈추지 않게.
+function captureDisplay(display) {
+  const now = Date.now();
+  const cached = captureCache.get(display.id);
+
+  if (!cached?.image) {
+    return refreshDisplay(display);
+  }
+
+  if (!cached.pending && now - cached.time >= CAPTURE_INTERVAL) {
+    refreshDisplay(display).catch(() => {});
+  }
+
+  return Promise.resolve(cached.image);
 }
 
 function rgbToHsl(r, g, b) {
@@ -58,25 +194,28 @@ async function getRegionAt(x, y, size = 11) {
   const display = screen.getDisplayNearestPoint({ x, y });
   const scaleFactor = display.scaleFactor;
 
-  const sources = await getSources(display);
-  const source =
-    sources.find((s) => s.display_id === String(display.id)) ?? sources[0];
-  if (!source) return null;
+  let image;
+  try {
+    image = await captureDisplay(display);
+  } catch {
+    return null;
+  }
+  if (!image) return null;
 
-  const thumbnail = source.thumbnail;
-  const thumbSize = thumbnail.getSize();
+  const imgSize = image.getSize();
+  if (!imgSize.width || !imgSize.height) return null;
 
   const half = Math.floor(size / 2);
   const px = Math.min(
     Math.max(Math.floor((x - display.bounds.x) * scaleFactor), half),
-    thumbSize.width - half - 1,
+    imgSize.width - half - 1,
   );
   const py = Math.min(
     Math.max(Math.floor((y - display.bounds.y) * scaleFactor), half),
-    thumbSize.height - half - 1,
+    imgSize.height - half - 1,
   );
 
-  const region = thumbnail.crop({
+  const region = image.crop({
     x: px - half,
     y: py - half,
     width: size,
