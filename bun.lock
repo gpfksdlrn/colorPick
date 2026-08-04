@@ -5,6 +5,7 @@
     "": {
       "dependencies": {
         "electron-store": "^11.0.2",
+        "screenshot-desktop": "^1.15.4",
       },
       "devDependencies": {
         "electron": "^41.3.0",
@@ -436,6 +437,8 @@
     "sanitize-filename": ["sanitize-filename@1.6.4", "", { "dependencies": { "truncate-utf8-bytes": "^1.0.0" } }, "sha512-9ZyI08PsvdQl2r/bBIGubpVdR3RR9sY6RDiWFPreA21C/EFlQhmgo20UZlNjZMMZNubusLhAQozkA0Od5J21Eg=="],
 
     "sax": ["sax@1.6.0", "", {}, "sha512-6R3J5M4AcbtLUdZmRv2SygeVaM7IhrLXu9BmnOGmmACak8fiUtOsYNWUS4uK7upbmHIBbLBeFeI//477BKLBzA=="],
+
+    "screenshot-desktop": ["screenshot-desktop@1.15.4", "", { "dependencies": { "temp": "^0.9.4" } }, "sha512-nvYzQH+pzA9cJVKxZzde4mX1ymZoPETUp3vT5vl72460782i+ZctSbV71vu+YU/9ktAEa9nONLRLpgliXgB5LA=="],
 
     "semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 

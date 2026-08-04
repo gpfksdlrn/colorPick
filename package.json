@@ -13,7 +13,8 @@
     "build": "electron-builder --publish never"
   },
   "dependencies": {
-    "electron-store": "^11.0.2"
+    "electron-store": "^11.0.2",
+    "screenshot-desktop": "^1.15.4"
   },
   "build": {
     "appId": "com.yourname.colorpick",
