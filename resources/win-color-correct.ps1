@@ -16,7 +16,7 @@ public static extern System.IntPtr CreateDC(string lpszDriver, string lpszDevice
 [System.Runtime.InteropServices.DllImport("gdi32.dll")]
 public static extern bool DeleteDC(System.IntPtr hdc);
 
-[System.Runtime.InteropServices.DllImport("mscms.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+[System.Runtime.InteropServices.DllImport("gdi32.dll", EntryPoint = "GetICMProfileW", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
 public static extern bool GetICMProfile(System.IntPtr hdc, ref uint pBufSize, System.Text.StringBuilder pszFilename);
 "@
 
@@ -35,7 +35,12 @@ finally {
   [ColorPick.Native]::DeleteDC($hdc) | Out-Null
 }
 
-$profilePath = Join-Path "$env:SystemRoot\System32\spool\drivers\color" $profileName
+# GetICMProfile은 문서상 파일명만 반환한다지만 실제로는 전체 경로를 주는 빌드도 있어 둘 다 대응한다.
+$profilePath = if ([System.IO.Path]::IsPathRooted($profileName)) {
+  $profileName
+} else {
+  Join-Path "$env:SystemRoot\System32\spool\drivers\color" $profileName
+}
 if (-not (Test-Path $profilePath)) { throw "ICC profile not found: $profilePath" }
 
 $srcContext = New-Object System.Windows.Media.ColorContext($profilePath)
