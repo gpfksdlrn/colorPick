@@ -16,6 +16,9 @@
     "electron-store": "^11.0.2",
     "screenshot-desktop": "^1.15.4"
   },
+  "patchedDependencies": {
+    "screenshot-desktop@1.15.4": "patches/screenshot-desktop@1.15.4.patch"
+  },
   "build": {
     "appId": "com.yourname.colorpick",
     "productName": "ColorPick",

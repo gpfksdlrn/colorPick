@@ -1,0 +1,13 @@
+diff --git a/lib/win32/screenCapture_1.3.2.bat b/lib/win32/screenCapture_1.3.2.bat
+index 0000000..0000000 100644
+--- a/lib/win32/screenCapture_1.3.2.bat
++++ b/lib/win32/screenCapture_1.3.2.bat
+@@ -18,7 +18,7 @@ if not exist "%~n0.exe" (
+       exit /b !errorlevel!
+    )
+ )
+-%~n0.exe %*
++"%~dpn0.exe" %*
+ endlocal & exit /b %errorlevel%
+
+ */
