@@ -66,7 +66,10 @@ function winMatchToSrgb(inputPath, outputPath, deviceName) {
 
 async function captureBuffer(screenIndex, deviceName) {
   if (process.platform === 'win32') {
-    const rawBuffer = await screenshot({ screen: screenIndex, format: 'png' });
+    // screenshot-desktop의 win32 백엔드는 screen 옵션을 모니터 디바이스명(예: \\.\DISPLAY2)으로
+    // 매칭한다 — 숫자 인덱스를 넘기면(특히 0은 JS에서 falsy라 아예 무시됨) 매칭에 실패해
+    // 항상 가상 데스크톱 전체를 캡처해버려 멀티 모니터에서 엉뚱한 화면 색이 나온다.
+    const rawBuffer = await screenshot({ screen: deviceName, format: 'png' });
     if (!deviceName) return rawBuffer;
 
     const tmpIn = path.join(os.tmpdir(), `colorpick-${process.pid}-${screenIndex}-in.png`);
