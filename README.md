@@ -91,7 +91,7 @@ https://github.com/user-attachments/assets/8d8b660c-d45d-48f9-835f-e19ff2b776e9
 | 영역 | 선택 | 근거 |
 | --- | --- | --- |
 | 데스크톱 프레임워크 | Electron | macOS/Windows를 단일 코드베이스로 지원해야 했고, 네이티브 언어(Swift/C#)로 두 플랫폼을 각각 구현하는 대신 JavaScript 기반으로 개발 속도를 확보하기 위해 채택 |
-| 런타임 | Node.js | `desktopCapturer`, `clipboard`, `globalShortcut` 등 OS 레벨 API 접근에 사용 |
+| 런타임 | Node.js | `screenshot-desktop`, `clipboard`, `globalShortcut` 등 OS 레벨 API 접근에 사용 |
 | UI | HTML / CSS / Vanilla JavaScript | 오버레이·트레이·토스트 UI 3종 모두 상태가 단순해 프레임워크 없이도 구현 가능하다고 판단, 러닝 커브와 번들 크기를 줄이기 위해 채택 |
 | 로컬 저장소 | electron-store | 단축키 설정, 복사 포맷, 색상 히스토리를 JSON 파일로 영속화 |
 | CI/CD | GitHub Actions | macOS/Windows 빌드를 병렬로 수행하고, 태그(`v*`) 푸시 시 두 빌드 아티팩트를 묶어 GitHub Release로 자동 배포 |
@@ -178,16 +178,22 @@ Claude와의 설계 논의 → 구현 → 디버깅 → CI/CD 구성까지 전 �
 
 ### 2. 화면 색상 추출 정확도와 성능
 
-* **문제**: 화면 어디서든 정확한 픽셀 색상을 빠르게 추출해야 하며, 오버레이가
-  떠 있는 동안 마우스가 움직일 때마다 반복 호출되므로 성능 저하 우려가 있었음
+* **문제**: `desktopCapturer` 기반으로 캡처한 픽셀 값이 실제 화면에 보이는
+  색과 미묘하게 다르게 추출됨 — 디스플레이의 ColorSync/ICC 프로파일(P3 등)이
+  적용된 원본 값을 그대로 읽어와서, 화면에 보이는 sRGB 색과 어긋난 값이 나온
+  것이 원인. 또한 오버레이가 떠 있는 동안 마우스가 움직일 때마다 캡처가 반복
+  호출되므로 성능 저하 우려도 있었음
 * **해결**:
-  * `desktopCapturer.getSources`로 디스플레이별 캡처본을 가져오되, 디스플레이
-    단위로 **50ms TTL 캐시**를 두어 동일 프레임 내 중복 캡처를 방지
+  * `desktopCapturer` 대신 OS 네이티브 캡처(macOS `screencapture`, Windows
+    `screenshot-desktop`)로 전환하고, macOS는 `sips --matchTo`, Windows는
+    ICC 프로파일 기반 PowerShell 스크립트로 캡처 결과를 **sRGB에 매칭**시켜
+    보정
+  * 캡처 비용을 줄이기 위해 stale-while-revalidate 방식 캐시 적용 — 캐시된
+    이미지를 즉시 반환하고, 450ms 주기로 백그라운드에서 최신 캡처로 갱신
   * 커서 좌표를 `scaleFactor`로 보정한 뒤, 단일 픽셀이 아닌 좌표 주변 11×11
     영역을 크롭하여 중심 픽셀 값을 사용 — 캡처 경계 오차로 인한 색상 오검출을
     줄이기 위한 처리
-  * BGRA 순서의 비트맵에서 RGB를 역산해 HEX로 변환하고, HSL은 표준 변환 공식을
-    직접 구현
+  * RGB 값을 HEX로 변환하고, HSL은 표준 변환 공식을 직접 구현
 
 ### 3. 멀티 디스플레이 대응
 
